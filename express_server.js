@@ -7,7 +7,7 @@ const PORT = 8080;
 app.set("view engine", "ejs");
 
 //Middleware to convert the request body from Buffer into string
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 
 const urlDatabase = {
@@ -51,12 +51,29 @@ app.get("/urls/:id", (req, res) => {  //:id is the route parameter
   res.render("urls_show", templateVars);
 });
 
-//POST route to receive Form Submission
+//POST route to receive Form Submission i.e. new URL
 app.post("/urls", (req, res) => {
+  //console.log(req.body);      //form info that was sent to the server
+  
   const id = generateRandomString();
-  console.log(req.body);
-  res.send("Ok");
-})
+  
+  const newURL = {
+    id: id,
+    longURL: req.body.longURL
+  }
+  
+  urlDatabase[id] = newURL.longURL;     //Add the new URL to the Database
+  
+  res.redirect(`/urls/${id}`);          //Redirect to '/urls/:id' route
+
+});
+
+//Redirect user to the longURL when they click on the shortURL link.
+app.get('/u/:id', (req, res) => {
+  //To-do Edge Cases
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
