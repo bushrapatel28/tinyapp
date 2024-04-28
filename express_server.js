@@ -15,7 +15,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-//Generate a string of 6 alphanumeric characters
+//Generate a string of 6 random alphanumeric characters
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).slice(2, 8);
   return randomString;
