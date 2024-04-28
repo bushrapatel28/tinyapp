@@ -28,6 +28,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 //If path is /urls/b2xVn2 then req.params.id would be b2xVn2
 app.get("/urls/:id", (req, res) => {  //:id is the route parameter
   const templateVars = { 
@@ -36,6 +40,7 @@ app.get("/urls/:id", (req, res) => {  //:id is the route parameter
   };
   res.render("urls_show", templateVars);
 });
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
