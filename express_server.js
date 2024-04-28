@@ -6,9 +6,19 @@ const PORT = 8080;
 //Configuration for view engine
 app.set("view engine", "ejs");
 
+//Middleware to convert the request body from Buffer into string
+app.use(express.urlencoded({ extended: true }));
+
+
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+//Generate a string of 6 alphanumeric characters
+const generateRandomString = function() {
+  const randomString = Math.random().toString(36).slice(2, 8);
+  return randomString;
 };
 
 app.get("/", (req, res) => {
@@ -41,6 +51,12 @@ app.get("/urls/:id", (req, res) => {  //:id is the route parameter
   res.render("urls_show", templateVars);
 });
 
+//POST route to receive Form Submission
+app.post("/urls", (req, res) => {
+  const id = generateRandomString();
+  console.log(req.body);
+  res.send("Ok");
+})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
