@@ -54,15 +54,10 @@ app.get("/urls/:id", (req, res) => {  //:id is the route parameter
 //POST route to receive Form Submission i.e. new URL
 app.post("/urls", (req, res) => {
   //console.log(req.body);      //form info that was sent to the server
-  
   const id = generateRandomString();
+  const newlongURL = req.body.longURL;
   
-  const newURL = {
-    id: id,
-    longURL: req.body.longURL
-  }
-  
-  urlDatabase[id] = newURL.longURL;     //Add the new URL to the Database
+  urlDatabase[id] = newlongURL;     //Add the new URL to the Database
   
   res.redirect(`/urls/${id}`);          //Redirect to '/urls/:id' route
 
