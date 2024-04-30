@@ -20,8 +20,8 @@
     </div>
     <% if (username) { %>
       <div class="navbar-nav">
-        <form class="form-inline" action="/urls" method="GET">
-          Logged in as: <%= username %> 
+        <form class="form-inline" action="/logout" method="POST">
+          <label style="margin: 0.5em;">Logged in as: <%= username %>! </label>
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
       </div>
