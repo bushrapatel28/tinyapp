@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const cookieParser = require('cookie-parser');
 const PORT = 8080;
 
 
@@ -8,6 +9,8 @@ app.set("view engine", "ejs");
 
 //Middleware to convert the request body from Buffer into string
 app.use(express.urlencoded({ extended: false }));
+//Middleware to parse Cookie header and populate req.cookies with an object keyed by the cookie names.
+app.use(cookieParser());
 
 
 const urlDatabase = {
@@ -34,17 +37,23 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  console.log(req.cookies["username"]);
+  const templateVars = { 
+    username: req.cookies["username"], 
+    urls: urlDatabase,
+  };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 //If path is /urls/b2xVn2 then req.params.id would be b2xVn2
 app.get("/urls/:id", (req, res) => {  //:id is the route parameter
   const templateVars = { 
+    username: req.cookies["username"],
     id: req.params.id,
     longURL: urlDatabase[req.params.id] 
   };
