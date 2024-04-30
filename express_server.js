@@ -37,9 +37,8 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  console.log(req.cookies["username"]);
   const templateVars = { 
-    username: req.cookies["username"], 
+    username: req.cookies["username"],      //Include Cookie header parsed data into the templateVars and pass it to the ejs file
     urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
