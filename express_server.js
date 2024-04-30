@@ -98,7 +98,7 @@ app.post('/urls/:id',(req, res) => {
 //Login Route
 app.post('/login', (req, res) => {
   const userName = req.body.username;   //form info (username) that was sent to the server
-  res.cookie('username', userName);
+  res.cookie('username', userName);     //Store username in the Respond Cookie
   res.redirect('/urls');
 });
 
