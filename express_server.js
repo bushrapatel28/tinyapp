@@ -170,7 +170,13 @@ app.post('/register', (req, res) => {
   res.redirect('/urls'); 
 });
 
+//Login Form Route
+app.get("/login", (req, res) => {
+  res.render("login");
+});
 
+
+//Listner
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
