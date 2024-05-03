@@ -37,6 +37,17 @@ const generateRandomString = function() {
   return randomString;
 };
 
+//User lookup helper function
+const getUserByEmail = function(formEmail) {
+  for (const userId in users) {           //Each property of users object
+    const user = users[userId];           //Each user object (sub-object) of the users object
+    if (user.email === formEmail) {
+      return user;
+    }
+  }
+  return null;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello");
 });
@@ -133,18 +144,28 @@ app.get("/register", (req, res) => {
 
 //Registration Route
 app.post('/register', (req, res) => {
-  const userID = generateRandomString();
-  const email = req.body.email;
-  const password = req.body.password;
-  
-  users[userID] = {   //Add the new user to the user object
-    id: userID,
-    email,
-    password
-  };       
-  
-  console.log("Users Database:", users);
 
+  const userID = generateRandomString();
+  const formEmail = req.body.email;
+  const formPassword = req.body.password;
+  
+  if (!formEmail || !formPassword) {
+    return res.status(400).end("Error 400: Email and/or Password fields cannot be empty!");
+  }
+  
+  const result = getUserByEmail(formEmail);
+
+  if (result) {
+    return res.status(400).end("Error 400: Email already in use!");
+  }
+  
+  users[userID] = {       //Add the new user to the user object
+    id: userID,
+    email: formEmail,
+    password: formPassword
+  };       
+  console.log("Users Database:", users);
+  
   res.cookie('user_id', userID);        //Set user_id cookie
   res.redirect('/urls'); 
 });
