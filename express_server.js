@@ -53,8 +53,7 @@ app.get("/urls", (req, res) => {
   const userID = req.cookies["user_id"];      //Cookie header parsed data
   const user = users[userID];
   const templateVars = { 
-    user: user,      //Include user object into the templateVars and pass it to the ejs file
-    
+    user: user,                 //Include user object into the templateVars and pass it to the ejs file
     urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
