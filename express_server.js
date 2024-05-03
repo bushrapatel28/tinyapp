@@ -46,6 +46,17 @@ const getUserByEmail = function(formEmail) {
     }
   }
   return null;
+};
+
+//Logged in User lookup helper function
+const getLoggedInUser = function(formEmail, formPassword) {
+  for (const userId in users) {           //Each property of users object
+    const user = users[userId];           //Each user object (sub-object) of the users object
+    if (user.email === formEmail && user.password === formPassword) {
+      return user.id;
+    }
+  }
+  return null;
 }
 
 app.get("/", (req, res) => {
@@ -126,20 +137,31 @@ app.post('/urls/:id',(req, res) => {
 
 //Login Route
 app.post('/login', (req, res) => {
-  const email = req.body.email;   //form info (username) that was sent to the server
-  res.cookie('email', email);     //Store username in the Respond Cookie
+  const formEmail = req.body.email;   //form info (Login email and password) that was sent to the server
+  const formPassword = req.body.password;
+
+  const result = getLoggedInUser(formEmail, formPassword);
+
+  if (!result) {
+    return res.status(403).end("Error 403: Invalid Email or Password. Try again!");
+  }
+  
+  res.cookie('user_id', result);     //Store user id in the Respond Cookie
   res.redirect('/urls');
 });
 
 //Logout Route
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');          //Clear/Delete the cookie
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 //Registration Form Route
 app.get("/register", (req, res) => {
-  res.render("register");
+  const userID = req.cookies["user_id"];      //Cookie header parsed data
+  const user = users[userID];
+  const templateVars = { user: user };        //Include user object into the templateVars and pass it to the ejs file
+  res.render("register", templateVars);
 });
 
 //Registration Route
@@ -151,13 +173,13 @@ app.post('/register', (req, res) => {
   
   if (!formEmail || !formPassword) {
     return res.status(400).end("Error 400: Email and/or Password fields cannot be empty!");
-  }
+  };
   
   const result = getUserByEmail(formEmail);
 
   if (result) {
     return res.status(400).end("Error 400: Email already in use!");
-  }
+  };
   
   users[userID] = {       //Add the new user to the user object
     id: userID,
@@ -172,7 +194,10 @@ app.post('/register', (req, res) => {
 
 //Login Form Route
 app.get("/login", (req, res) => {
-  res.render("login");
+  const userID = req.cookies["user_id"];      //Cookie header parsed data
+  const user = users[userID];
+  const templateVars = { user: user };                               //Include user object into the templateVars and pass it to the ejs file
+  res.render("login", templateVars);
 });
 
 
