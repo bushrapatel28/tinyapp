@@ -12,10 +12,23 @@ app.use(express.urlencoded({ extended: false }));
 //Middleware to parse Cookie header and populate req.cookies with an object keyed by the cookie names.
 app.use(cookieParser());
 
-
+//Database
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
 };
 
 //Generate a string of 6 random alphanumeric characters
@@ -37,22 +50,29 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  const userID = req.cookies["user_id"];      //Cookie header parsed data
+  const user = users[userID];
   const templateVars = { 
-    username: req.cookies["username"],      //Include Cookie header parsed data into the templateVars and pass it to the ejs file
+    user: user,      //Include user object into the templateVars and pass it to the ejs file
+    
     urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const userID = req.cookies["user_id"];
+  const user = users[userID];
+  const templateVars = { user: user };
   res.render("urls_new", templateVars);
 });
 
 //If path is /urls/b2xVn2 then req.params.id would be b2xVn2
 app.get("/urls/:id", (req, res) => {  //:id is the route parameter
-  const templateVars = { 
-    username: req.cookies["username"],
+  const userID = req.cookies["user_id"];
+  const user = users[userID];
+  const templateVars = {
+    user: user,
     id: req.params.id,
     longURL: urlDatabase[req.params.id] 
   };
@@ -96,21 +116,40 @@ app.post('/urls/:id',(req, res) => {
 
 //Login Route
 app.post('/login', (req, res) => {
-  const userName = req.body.username;   //form info (username) that was sent to the server
-  res.cookie('username', userName);     //Store username in the Respond Cookie
+  const email = req.body.email;   //form info (username) that was sent to the server
+  res.cookie('email', email);     //Store username in the Respond Cookie
   res.redirect('/urls');
 });
 
 //Logout Route
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');          //Clear/Delete the cookie
+  res.clearCookie('user_id');          //Clear/Delete the cookie
   res.redirect('/urls');
 });
 
-//Registration Route
+//Registration Form Route
 app.get("/register", (req, res) => {
   res.render("register");
 });
+
+//Registration Route
+app.post('/register', (req, res) => {
+  const userID = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  
+  users[userID] = {   //Add the new user to the user object
+    id: userID,
+    email,
+    password
+  };       
+  
+  console.log("Users Database:", users);
+
+  res.cookie('user_id', userID);        //Set user_id cookie
+  res.redirect('/urls'); 
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
