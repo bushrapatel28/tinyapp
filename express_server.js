@@ -90,7 +90,7 @@ app.get("/urls/new", (req, res) => {
 
 //If path is /urls/b2xVn2 then req.params.id would be b2xVn2
 app.get("/urls/:id", (req, res) => {  //:id is the route parameter
-  const userID = req.cookies["user_id"];
+  const userID = req.cookies["user_id"];      //form info that was sent to the server
   const user = users[userID];
   const templateVars = {
     user: user,
