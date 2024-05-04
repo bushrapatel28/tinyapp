@@ -1,7 +1,9 @@
 const express = require('express');
 const app = express();
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 const PORT = 8080;
+const salt = bcrypt.genSaltSync(10);
 
 
 //Configuration for view engine
@@ -28,12 +30,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", salt)     //Hashing Password
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: "$2a$10$LSecq/nPOv7oQn25v6ah9e1ITTFzykHU0UIXcabWdlAcrVQkibLBG"     //Hashed Password
   },
 };
 
@@ -65,18 +67,18 @@ const urlsForUser = function (id) {
     }
   }
   return urls;
-}
+};
 
 //Logged in User lookup helper function
 const getLoggedInUser = function(formEmail, formPassword) {
   for (const userId in users) {           //Each property of users object
     const user = users[userId];           //Each user object (sub-object) of the users object
-    if (user.email === formEmail && user.password === formPassword) {
+    if (user.email === formEmail && bcrypt.compareSync(formPassword, user.password)) {    //Compare formPassword hash with stored user's (hashed) password
       return user.id;
     }
   }
   return null;
-}
+};
 
 app.get("/", (req, res) => {
   res.send("Hello");
@@ -192,7 +194,7 @@ app.post('/urls/:id/delete', (req, res) => {
   if (!keys.includes(req.params.id)) {
     return res.status(403).end("Error 403: Access Denied");
   };
-  
+
   delete urlDatabase[id];
   res.redirect('/urls');
 });
@@ -227,7 +229,7 @@ app.post('/urls/:id',(req, res) => {
 app.post('/login', (req, res) => {
   const formEmail = req.body.email;       //form info (Login email and password) that was sent to the server
   const formPassword = req.body.password;
-
+  
   const result = getLoggedInUser(formEmail, formPassword);
 
   if (!result) {
@@ -260,7 +262,8 @@ app.post('/register', (req, res) => {
   const userID = generateRandomString();
   const formEmail = req.body.email;
   const formPassword = req.body.password;
-  
+  const hash = bcrypt.hashSync(formPassword, salt);
+
   if (!formEmail || !formPassword) {
     return res.status(400).end("Error 400: Email and/or Password fields cannot be empty!");
   };
@@ -274,7 +277,7 @@ app.post('/register', (req, res) => {
   users[userID] = {             //Add the new user to the user object
     id: userID,
     email: formEmail,
-    password: formPassword
+    password: hash
   };
   console.log("Users Database:", users);
   
