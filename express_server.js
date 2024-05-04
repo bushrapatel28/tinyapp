@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const PORT = 8080;
 const salt = bcrypt.genSaltSync(10);
@@ -11,8 +11,12 @@ app.set("view engine", "ejs");
 
 //Middleware to convert the request body from Buffer into string
 app.use(express.urlencoded({ extended: false }));
-//Middleware to parse Cookie header and populate req.cookies with an object keyed by the cookie names.
-app.use(cookieParser());
+//Middleware to parse Cookie header and populate req.session with an object keyed by the cookie names.
+app.use(cookieSession({
+  name: 'session',
+  keys: ['wifjwopfkolwnmgr'],
+  maxAge: 24 * 60 * 60 * 1000   //24 hours
+}));
 
 //Database
 const urlDatabase = {
@@ -93,7 +97,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userID = req.cookies["user_id"];      //Cookie header parsed data
+  const userID = req.session.user_id;      //Cookie header parsed data
   
   if (!userID) {
     return res.status(401).end("Please Login or Register to continue.");
@@ -110,7 +114,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   if (!userID) {
     res.redirect('/login');
   }
@@ -121,7 +125,7 @@ app.get("/urls/new", (req, res) => {
 
 //If path is /urls/b2xVn2 then req.params.id would be b2xVn2
 app.get("/urls/:id", (req, res) => {          //:id is the route parameter
-  const userID = req.cookies["user_id"];      //form info that was sent to the server
+  const userID = req.session.user_id;      //form info that was sent to the server
   
   if (!userID) {
     return res.status(401).end("Please Login or Register to continue.");
@@ -146,7 +150,7 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
 //POST route to receive Form Submission i.e. new URL
 app.post("/urls", (req, res) => {
   //console.log(req.body);              //form info that was sent to the server
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   if (!userID) {
     return res.status(401).end("Please Login to make changes.");
   };
@@ -171,13 +175,14 @@ app.get('/u/:id', (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
   if (!longURL) {                                           //If :id does not exist in the database
     return res.status(404).end("Error 404: Page Not Found");
-  }
+  };
+  
   res.redirect(longURL);
 });
 
 //Delete/Remove a URL resource
 app.post('/urls/:id/delete', (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   if (!userID) {
     return res.status(401).end("Please Login to make changes.");
   };
@@ -201,7 +206,7 @@ app.post('/urls/:id/delete', (req, res) => {
 
 //Edit/Update a URL resource
 app.post('/urls/:id',(req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   if (!userID) {
     return res.status(401).end("Please Login to make changes.");
   };
@@ -236,19 +241,19 @@ app.post('/login', (req, res) => {
     return res.status(403).end("Error 403: Invalid Email or Password. Try again!");
   }
   
-  res.cookie('user_id', result);     //Store user id in the Respond Cookie
+  req.session.user_id = result;     //Store user id in the Respond Cookie
   res.redirect('/urls');
 });
 
 //Logout Route
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');          //Clear/Delete the cookie
+  req.session = null;         //Clear/Delete the cookie
   res.redirect('/login');
 });
 
 //Registration Form Route
 app.get("/register", (req, res) => {
-  const userID = req.cookies["user_id"];      //Cookie header parsed data
+  const userID = req.session.user_id;      //Cookie header parsed data
   if (userID) {                               //If user is already Logged in
     res.redirect('/urls');
   };
@@ -281,13 +286,13 @@ app.post('/register', (req, res) => {
   };
   console.log("Users Database:", users);
   
-  res.cookie('user_id', userID);        //Set user_id cookie
+  req.session.user_id = userID;        //Set user_id cookie
   res.redirect('/urls'); 
 });
 
 //Login Form Route
 app.get("/login", (req, res) => {
-  const userID = req.cookies["user_id"];      //Cookie header parsed data
+  const userID = req.session.user_id;      //Cookie header parsed data
   if (userID) {                               //If user is already Logged in
     res.redirect('/urls');
   };
