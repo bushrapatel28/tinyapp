@@ -76,20 +76,23 @@ app.get("/urls", (req, res) => {
   const user = users[userID];
   const templateVars = { 
     user: user,                 //Include user object into the templateVars and pass it to the ejs file
-    urls: urlDatabase,
+    urls: urlDatabase
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
+  if (!userID) {
+    res.redirect('/login');
+  }
   const user = users[userID];
   const templateVars = { user: user };
   res.render("urls_new", templateVars);
 });
 
 //If path is /urls/b2xVn2 then req.params.id would be b2xVn2
-app.get("/urls/:id", (req, res) => {  //:id is the route parameter
+app.get("/urls/:id", (req, res) => {          //:id is the route parameter
   const userID = req.cookies["user_id"];      //form info that was sent to the server
   const user = users[userID];
   const templateVars = {
@@ -102,11 +105,16 @@ app.get("/urls/:id", (req, res) => {  //:id is the route parameter
 
 //POST route to receive Form Submission i.e. new URL
 app.post("/urls", (req, res) => {
-  //console.log(req.body);      //form info that was sent to the server
+  //console.log(req.body);              //form info that was sent to the server
+  const userID = req.cookies["user_id"];
+  if (!userID) {
+    return res.status(403).end("Please Login to make changes.");
+  }
+  
   const id = generateRandomString();
   const newlongURL = req.body.longURL;
   
-  urlDatabase[id] = newlongURL;       //Add the new URL to the Database
+  urlDatabase[id] = newlongURL;         //Add the new URL to the Database
   
   res.redirect(`/urls/${id}`);          //Redirect to '/urls/:id' route
 
@@ -114,8 +122,10 @@ app.post("/urls", (req, res) => {
 
 //Redirect user to the longURL when they click on the shortURL link.
 app.get('/u/:id', (req, res) => {
-  //To-do Edge Cases
   const longURL = urlDatabase[req.params.id];
+  if (!longURL) {                                           //If :id does not exist in the database
+    return res.status(404).end("Error 404: Page Not Found");
+  }
   res.redirect(longURL);
 });
 
@@ -137,7 +147,7 @@ app.post('/urls/:id',(req, res) => {
 
 //Login Route
 app.post('/login', (req, res) => {
-  const formEmail = req.body.email;   //form info (Login email and password) that was sent to the server
+  const formEmail = req.body.email;       //form info (Login email and password) that was sent to the server
   const formPassword = req.body.password;
 
   const result = getLoggedInUser(formEmail, formPassword);
@@ -159,6 +169,9 @@ app.post('/logout', (req, res) => {
 //Registration Form Route
 app.get("/register", (req, res) => {
   const userID = req.cookies["user_id"];      //Cookie header parsed data
+  if (userID) {                               //If user is already Logged in
+    res.redirect('/urls');
+  };
   const user = users[userID];
   const templateVars = { user: user };        //Include user object into the templateVars and pass it to the ejs file
   res.render("register", templateVars);
@@ -166,7 +179,6 @@ app.get("/register", (req, res) => {
 
 //Registration Route
 app.post('/register', (req, res) => {
-
   const userID = generateRandomString();
   const formEmail = req.body.email;
   const formPassword = req.body.password;
@@ -181,11 +193,11 @@ app.post('/register', (req, res) => {
     return res.status(400).end("Error 400: Email already in use!");
   };
   
-  users[userID] = {       //Add the new user to the user object
+  users[userID] = {             //Add the new user to the user object
     id: userID,
     email: formEmail,
     password: formPassword
-  };       
+  };
   console.log("Users Database:", users);
   
   res.cookie('user_id', userID);        //Set user_id cookie
@@ -195,8 +207,11 @@ app.post('/register', (req, res) => {
 //Login Form Route
 app.get("/login", (req, res) => {
   const userID = req.cookies["user_id"];      //Cookie header parsed data
+  if (userID) {                               //If user is already Logged in
+    res.redirect('/urls');
+  };
   const user = users[userID];
-  const templateVars = { user: user };                               //Include user object into the templateVars and pass it to the ejs file
+  const templateVars = { user: user };        //Include user object into the templateVars and pass it to the ejs file
   res.render("login", templateVars);
 });
 
