@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CONSTANTS
+// MODULES AND CONSTANTS
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const express = require('express');
 const app = express();
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const { getUserByEmail, urlsForUser, getLoggedInUser } = require('./helpers');
 const PORT = 8080;
 const salt = bcrypt.genSaltSync(10);            //Salt for Hash
 
@@ -56,48 +57,13 @@ const users = {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// HELPER FUNCTIONS
+// RANDOM STRING GENERATOR FOR IDs
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Generate a string of 6 random alphanumeric characters
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).slice(2, 8);
   return randomString;
-};
-
-//User lookup helper function
-const getUserByEmail = function(formEmail) {
-  for (const userId in users) {           //Each property of users object
-    const user = users[userId];           //Each user object (sub-object) of the user object
-    if (user.email === formEmail) {
-      return user;
-    }
-  }
-  return null;
-};
-
-//Filter urlDatabase function
-const urlsForUser = function(id) {
-  const urls = {};
-  for (const urlID in urlDatabase) {        //Each property of urlDatabase
-    const urlObj = urlDatabase[urlID];      //Each url Object of the urlID
-    if (urlObj.userID === id) {
-      urls[urlID] = urlObj;
-      console.log(urls);
-    }
-  }
-  return urls;
-};
-
-//Logged in User lookup helper function
-const getLoggedInUser = function(formEmail, formPassword) {
-  for (const userId in users) {           //Each property of users object
-    const user = users[userId];           //Each user object (sub-object) of the users object
-    if (user.email === formEmail && bcrypt.compareSync(formPassword, user.password)) {    //Compare formPassword hash with stored user's (hashed) password
-      return user.id;
-    }
-  }
-  return null;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +84,7 @@ app.get("/urls", (req, res) => {
     return res.status(401).end("Please Login or Register to continue.");
   }
 
-  const userUrls = urlsForUser(userID);       //Returned Urls Object
+  const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
   const user = users[userID];
   const templateVars = {
     user: user,                 //Include user object into the templateVars and pass it to the ejs file
@@ -146,7 +112,7 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
   }
 
   const user = users[userID];
-  const userUrls = urlsForUser(userID);       //Returned Urls Object
+  const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
   const keys = Object.keys(userUrls);
   if (!keys.includes(req.params.id)) {
     return res.status(403).end("Error 403: Access Denied");
@@ -228,7 +194,7 @@ app.post('/urls/:id/delete', (req, res) => {
     return res.status(400).end("Error 400: Not Found");
   }
   
-  const userUrls = urlsForUser(userID);       //Returned Urls Object
+  const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
   const keys = Object.keys(userUrls);
   if (!keys.includes(req.params.id)) {
     return res.status(403).end("Error 403: Access Denied");
@@ -251,7 +217,7 @@ app.post('/urls/:id',(req, res) => {
     return res.status(400).end("Error 400: Not Found");
   }
   
-  const userUrls = urlsForUser(userID);       //Returned Urls Object
+  const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
   const keys = Object.keys(userUrls);
   if (!keys.includes(id)) {
     return res.status(403).end("Error 403: Access Denied");
@@ -267,7 +233,7 @@ app.post('/login', (req, res) => {
   const formEmail = req.body.email;       //form info (Login email and password) that was sent to the server
   const formPassword = req.body.password;
 
-  const result = getLoggedInUser(formEmail, formPassword);
+  const result = getLoggedInUser(formEmail, formPassword, users);
   if (!result) {
     return res.status(403).end("Error 403: Invalid Email or Password. Try again!");
   }
@@ -293,7 +259,7 @@ app.post('/register', (req, res) => {
     return res.status(400).end("Error 400: Email and/or Password fields cannot be empty!");
   }
   
-  const result = getUserByEmail(formEmail);
+  const result = getUserByEmail(formEmail, users);
   if (result) {
     return res.status(400).end("Error 400: Email already in use!");
   }
