@@ -23,7 +23,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieSession({
   name: 'session',
   keys: ['wifjwopfkolwnmgr'],
-  maxAge: 24 * 60 * 60 * 1000   //24 hours
 }));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +54,6 @@ const users = {
   },
 };
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RANDOM STRING GENERATOR FOR IDs
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,13 +73,18 @@ const generateRandomString = function() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/", (req, res) => {
-  res.send("Hello");
+  const userID = req.session.user_id;      //form info that was sent to the server
+  if (!userID) {
+    res.redirect("/login");
+  }
+
+  res.redirect('/urls');
 });
 
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;      //Cookie header parsed data
   if (!userID) {
-    return res.status(401).end("Please Login or Register to continue.");
+    return res.status(401).end("Please Login/Register to continue.");
   }
 
   const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
@@ -108,7 +111,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {          //:id is the route parameter
   const userID = req.session.user_id;      //form info that was sent to the server
   if (!userID) {
-    return res.status(401).end("Please Login or Register to continue.");
+    return res.status(401).end("Please Login/Register to continue.");
   }
 
   const user = users[userID];
@@ -118,6 +121,11 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
     return res.status(403).end("Error 403: Access Denied");
   }
   
+  const longURL = urlDatabase[req.params.id].longURL;
+  if (!longURL) {                                           //If :id does not exist in the database
+    return res.status(400).end("Error 400: Bad Request - Invalid URL");
+  }
+
   const templateVars = {
     user: user,
     id: req.params.id,
@@ -129,10 +137,9 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
 //Redirect user to the longURL when they click on the shortURL link.
 app.get('/u/:id', (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
-  if (!longURL) {                                           //If :id does not exist in the database
-    return res.status(404).end("Error 404: Page Not Found");
+  if (!longURL) {                                           //If :id does not exist
+    return res.status(404).end("Error 404: URL Not Found");
   }
-
   res.redirect(longURL);
 });
 
@@ -235,7 +242,7 @@ app.post('/login', (req, res) => {
 
   const result = getLoggedInUser(formEmail, formPassword, users);
   if (!result) {
-    return res.status(403).end("Error 403: Invalid Email or Password. Try again!");
+    return res.status(401).end("Error 401: Incorrect Email or Password. Try again!");
   }
   
   req.session.user_id = result;     //Store user id in the Respond Cookie (SAME AS res.cookie(cookieName, value))
@@ -253,7 +260,6 @@ app.post('/register', (req, res) => {
   const userID = generateRandomString();
   const formEmail = req.body.email;
   const formPassword = req.body.password;
-  const hash = bcrypt.hashSync(formPassword, salt);
 
   if (!formEmail || !formPassword) {
     return res.status(400).end("Error 400: Email and/or Password fields cannot be empty!");
@@ -261,9 +267,10 @@ app.post('/register', (req, res) => {
   
   const result = getUserByEmail(formEmail, users);
   if (result) {
-    return res.status(400).end("Error 400: Email already in use!");
+    return res.status(403).end("Error 403: Email already in use!");
   }
   
+  const hash = bcrypt.hashSync(formPassword, salt);
   users[userID] = {             //Add the new user to the user object
     id: userID,
     email: formEmail,
