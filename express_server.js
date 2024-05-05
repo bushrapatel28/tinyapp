@@ -142,7 +142,7 @@ app.get('/u/:id', (req, res) => {
   if (!urlDatabase[req.params.id]) {                          //If :id does not exist in the database
     return res.status(404).end("Error 404: Non-existent URL");
   }
-  
+
   const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
@@ -271,7 +271,7 @@ app.post('/register', (req, res) => {
   
   const result = getUserByEmail(formEmail, users);
   if (result) {
-    return res.status(403).end("Error 403: Email already in use!");
+    return res.status(400).end("Error 400: Account already exists");
   }
   
   const hash = bcrypt.hashSync(formPassword, salt);
