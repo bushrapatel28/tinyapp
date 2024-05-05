@@ -19,11 +19,11 @@ const testUsers = {
 const testUrlDatabase = {
   b2xVn2: {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "user2RandomID"
+    userID: "userRandomID"
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
-    userID: "userRandomID"
+    userID: "user2RandomID"
   }
 };
 
@@ -57,8 +57,8 @@ describe('getUserByEmail', function() {
 describe('urlsForUser', function() {
   it('should return the object containing all urls for a valid user id', function() {
     const urls = urlsForUser("user2RandomID", testUrlDatabase);
-    const expectedUrls = { b2xVn2: {
-      longURL: "http://www.lighthouselabs.ca",
+    const expectedUrls = { "9sm5xK": {
+      longURL: "http://www.google.com",
       userID: "user2RandomID"
     }};
     assert.deepEqual(urls, expectedUrls);
