@@ -33,7 +33,7 @@ describe('User Authentication and Access Control', function() {
             done();
           });
       })
-      .catch(function (err) {
+      .catch(function(err) {
         agent.close(); // Ensure agent is closed in case of errors
         done(err);
       });
@@ -87,12 +87,12 @@ describe('Route Access Control', function() {
         // Check if login was successful
         expect(agent).to.have.cookie('session');
 
-      return agent
-        .get('/urls/NOTEXISTS')
-        .then(res => {
-          expect(res).to.have.status(404);
-          done();
-        })
+        return agent
+          .get('/urls/NOTEXISTS')
+          .then(res => {
+            expect(res).to.have.status(404);
+            done();
+          });
       })
       .catch(err => done(err));
   });
