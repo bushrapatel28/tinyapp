@@ -19,6 +19,10 @@ app.set("view engine", "ejs");
 
 //Middleware to convert the request body from Buffer into string
 app.use(express.urlencoded({ extended: false }));
+
+//Middleware to decode JSON info
+app.use(express.json());
+
 //Middleware to parse Cookie header and populate req.session with an object keyed by the cookie names.
 app.use(cookieSession({
   name: 'session',
@@ -33,11 +37,11 @@ app.use(cookieSession({
 const urlDatabase = {
   b2xVn2: {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "user2RandomID"
+    userID: "userRandomID"
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
-    userID: "userRandomID"
+    userID: "user2RandomID"
   }
 };
 
@@ -75,7 +79,7 @@ const generateRandomString = function() {
 app.get("/", (req, res) => {
   const userID = req.session.user_id;      //form info that was sent to the server
   if (!userID) {
-    res.redirect("/login");
+    return res.redirect("/login");
   }
 
   res.redirect('/urls');
@@ -99,7 +103,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    res.redirect('/login');
+    return res.redirect('/login');
   }
 
   const user = users[userID];
@@ -113,6 +117,16 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
   if (!userID) {
     return res.status(401).end("Please Login/Register to continue.");
   }
+  
+  if (!urlDatabase[req.params.id]) {                          //If :id does not exist in the database
+    return res.status(404).end("Error 404: Non-existent URL");
+  }
+
+  //const longURL = urlDatabase[req.params.id] ? urlDatabase[req.params.id].longUrl : null
+  // const longURL = urlDatabase[req.params.id].longURL;
+  // if (!longURL) {                                           //If :id does not exist in the database
+  //   return res.status(404).end("Error 404: Non-existent URL");
+  // }
 
   const user = users[userID];
   const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
@@ -121,11 +135,6 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
     return res.status(403).end("Error 403: Access Denied");
   }
   
-  const longURL = urlDatabase[req.params.id].longURL;
-  if (!longURL) {                                           //If :id does not exist in the database
-    return res.status(400).end("Error 400: Bad Request - Invalid URL");
-  }
-
   const templateVars = {
     user: user,
     id: req.params.id,
@@ -136,10 +145,13 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
 
 //Redirect user to the longURL when they click on the shortURL link.
 app.get('/u/:id', (req, res) => {
-  const longURL = urlDatabase[req.params.id].longURL;
-  if (!longURL) {                                           //If :id does not exist
-    return res.status(404).end("Error 404: URL Not Found");
+  if (!urlDatabase[req.params.id]) {                          //If :id does not exist in the database
+    return res.status(404).end("Error 404: Non-existent URL");
   }
+  const longURL = urlDatabase[req.params.id].longURL;
+  // if (!longURL) {                                           //If :id does not exist
+  //   return res.status(404).end("Error 404: URL Not Found");
+  // }
   res.redirect(longURL);
 });
 
@@ -147,7 +159,7 @@ app.get('/u/:id', (req, res) => {
 app.get("/register", (req, res) => {
   const userID = req.session.user_id;         //Cookie header parsed data
   if (userID) {                               //If user is already Logged in
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
 
   const user = users[userID];
@@ -159,7 +171,7 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const userID = req.session.user_id;      //Cookie header parsed data
   if (userID) {                               //If user is already Logged in
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
 
   const user = users[userID];
@@ -221,7 +233,7 @@ app.post('/urls/:id',(req, res) => {
   const id = req.params.id;
   const ids = Object.keys(urlDatabase);
   if (!ids.includes(id)) {
-    return res.status(400).end("Error 400: Not Found");
+    return res.status(404).end("Error 404: URL does not exist");
   }
   
   const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
@@ -276,7 +288,6 @@ app.post('/register', (req, res) => {
     email: formEmail,
     password: hash
   };
-  console.log("Users Database:", users);
   req.session.user_id = userID;        //Set user_id cookie
   res.redirect('/urls');
 });
