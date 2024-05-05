@@ -122,12 +122,6 @@ app.get("/urls/:id", (req, res) => {          //:id is the route parameter
     return res.status(404).end("Error 404: Non-existent URL");
   }
 
-  //const longURL = urlDatabase[req.params.id] ? urlDatabase[req.params.id].longUrl : null
-  // const longURL = urlDatabase[req.params.id].longURL;
-  // if (!longURL) {                                           //If :id does not exist in the database
-  //   return res.status(404).end("Error 404: Non-existent URL");
-  // }
-
   const user = users[userID];
   const userUrls = urlsForUser(userID, urlDatabase);       //Returned Urls Object
   const keys = Object.keys(userUrls);
@@ -148,10 +142,8 @@ app.get('/u/:id', (req, res) => {
   if (!urlDatabase[req.params.id]) {                          //If :id does not exist in the database
     return res.status(404).end("Error 404: Non-existent URL");
   }
+  
   const longURL = urlDatabase[req.params.id].longURL;
-  // if (!longURL) {                                           //If :id does not exist
-  //   return res.status(404).end("Error 404: URL Not Found");
-  // }
   res.redirect(longURL);
 });
 
