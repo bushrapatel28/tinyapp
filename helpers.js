@@ -11,7 +11,7 @@ const getUserByEmail = function(formEmail, database) {
   return user;
 };
 
-//Filter urlDatabase function
+//Filter urlDatabase helper function
 const urlsForUser = function(id, urlDatabase) {
   const urls = {};
   for (const urlID in urlDatabase) {        //Each property of urlDatabase
