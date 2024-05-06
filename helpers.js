@@ -30,7 +30,6 @@ const getLoggedInUser = function(formEmail, formPassword, database) {
     //Each user object (sub-object) of the users object
     if (database[userId].email === formEmail && bcrypt.compareSync(formPassword, database[userId].password)) {    //Compare formPassword hash with stored user's (hashed) password
       user = database[userId].id;
-      //console.log(user);
     }
   }
   return user;
